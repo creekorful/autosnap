@@ -8,3 +8,4 @@ license = "GPL-3.0"
 repository = "https://github.com/creekorful/autosnap"
 
 [dependencies]
+clap = "2.33.3"
