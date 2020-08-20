@@ -9,3 +9,5 @@ repository = "https://github.com/creekorful/autosnap"
 
 [dependencies]
 clap = "2.33.3"
+git2 = "0.13.9"
+url = "2.1.1"
