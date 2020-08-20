@@ -1,0 +1,10 @@
+[package]
+name = "autosnap"
+version = "0.1.0"
+authors = ["Aloïs Micard <alois@micard.lu>"]
+edition = "2018"
+description = "Automatically make Snap package from github repository"
+license = "GPL-3.0"
+repository = "https://github.com/creekorful/autosnap"
+
+[dependencies]
