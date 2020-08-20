@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::process::exit;
+
 use clap::{App, AppSettings, Arg, crate_authors, crate_version};
 
 fn main() {
@@ -15,5 +18,14 @@ fn main() {
         .get_matches();
 
     let src = matches.value_of("src").unwrap();
-    print!("{}", src);
+    println!("Starting packaging of {}", src);
+
+    if let Err(e) = package(src) {
+        eprintln!("Error encountered while packaging: {}", e);
+        exit(1);
+    }
+}
+
+fn package(repo_uri: &str) -> Result<(), Box<dyn Error>> {
+    Err("not implemented".into())
 }
