@@ -1,9 +1,39 @@
+use std::collections::BTreeMap;
 use std::error::Error;
 use std::process::exit;
 use std::{env, fs};
 
 use clap::{crate_authors, crate_version, App, AppSettings, Arg};
+use serde::{Deserialize, Serialize};
 use url::Url;
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct SnapFile {
+    name: String,
+    base: String,
+    version: String,
+    summary: String,
+    description: String,
+    license: String,
+    grade: String,
+    confinement: String,
+    parts: BTreeMap<String, SnapPart>,
+    apps: BTreeMap<String, SnapApp>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct SnapPart {
+    plugin: String,
+    source: String,
+    #[serde(rename = "build-packages")]
+    build_packages: Vec<String>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct SnapApp {
+    command: String,
+    plugs: Vec<String>,
+}
 
 fn main() {
     let matches = App::new("autosnap")
@@ -41,7 +71,7 @@ fn main() {
     }
 }
 
-fn package(repo_uri: &Url) -> Result<(), Box<dyn Error>> {
+fn package(repo_uri: &Url) -> Result<SnapFile, Box<dyn Error>> {
     let cwd = env::current_dir()?;
     let repo_name = repo_uri.path_segments().unwrap().last().unwrap();
     let path = cwd.join(repo_name);
@@ -54,6 +84,22 @@ fn package(repo_uri: &Url) -> Result<(), Box<dyn Error>> {
         fs::remove_dir_all(path)?;
         return Err(format!("{} is already packaged", repo_uri).into());
     }
+
+    // TODO Identify the project license
+    // using https://github.com/jpeddicord/askalono
+
+    let snap = SnapFile {
+        name: repo_name.to_string(),
+        base: "core18".to_string(),
+        version: "git".to_string(),
+        summary: "".to_string(),     // Extract from Github API
+        description: "".to_string(), // Extract from README.md
+        license: "".to_string(),     // Extract using askalono
+        grade: "stable".to_string(),
+        confinement: "strict".to_string(),
+        parts: Default::default(),
+        apps: Default::default(),
+    };
 
     Err("not implemented".into())
 }
