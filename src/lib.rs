@@ -1,6 +1,6 @@
 mod generator;
 
-use crate::generator::{Generator, GeneratorBuilder, Generators};
+use crate::generator::{Generator, GeneratorBuilder};
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::{env, fs};

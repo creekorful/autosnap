@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct File {
     pub name: String,
     pub base: String,
@@ -32,7 +32,7 @@ impl File {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Part {
     pub plugin: String,
     pub source: String,
@@ -40,7 +40,7 @@ pub struct Part {
     pub build_packages: Vec<String>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct App {
     pub command: String,
     pub plugs: Vec<String>,

@@ -1,4 +1,5 @@
-use crate::snap::File;
+use crate::snap::{File, Part};
+use std::collections::BTreeMap;
 use std::error::Error;
 
 /// A Generator is a autosnap extension that know how to package
@@ -35,6 +36,20 @@ pub struct RustGenerator {}
 
 impl Generator for RustGenerator {
     fn generate(&self, snap: &File) -> Result<File, Box<dyn Error>> {
-        unimplemented!()
+        let mut snap = snap.clone();
+
+        // generate parts
+        let mut parts: BTreeMap<String, Part> = BTreeMap::new();
+        parts.insert(
+            snap.name.clone(),
+            Part {
+                plugin: "rust".to_string(),
+                source: ".".to_string(),
+                build_packages: vec!["libc6-dev".to_string()],
+            },
+        );
+        snap.parts = parts;
+
+        Ok(snap)
     }
 }
