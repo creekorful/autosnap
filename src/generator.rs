@@ -38,7 +38,7 @@ impl Default for GeneratorBuilder {
 
         // Fill supported languages here
         generators.insert("Cargo.toml".to_string(), Generators::Rust(RustGenerator {}));
-        generators.insert("go.mod".to_string(), Generators::Go(GoGenerator {}));
+        //generators.insert("go.mod".to_string(), Generators::Go(GoGenerator {}));
 
         GeneratorBuilder { generators }
     }
