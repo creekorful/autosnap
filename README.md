@@ -5,5 +5,5 @@ Automatically make Snap package from github repository.
 Example:
 
 ```sh
-$ autosnap github.com/creekorful/osync
+$ autosnap https://github.com/creekorful/osync
 ```

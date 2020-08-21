@@ -49,12 +49,7 @@ fn main() {
         .setting(AppSettings::ArgRequiredElseHelp)
         .get_matches();
 
-    let mut src = matches.value_of("src").unwrap().to_string();
-    // preprend https:// if not present
-    if !src.starts_with("http") {
-        src = format!("https://{}", src);
-    }
-
+    let src = matches.value_of("src").unwrap().to_string();
     let src = match Url::parse(&src) {
         Ok(src) => src,
         Err(_) => {
