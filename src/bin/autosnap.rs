@@ -16,12 +16,12 @@ fn main() {
     let matches = App::new("autosnap")
         .version(crate_version!())
         .author(crate_authors!())
-        .about("Automatically make Snap package from github repository")
+        .about("Automatically make Snap package from git repository")
         .arg(
             Arg::with_name("repo")
                 .value_name("REPO")
                 .required(true)
-                .help("The github repository (example: https://github.com/creekorful/osync)."),
+                .help("The git repository (example: https://github.com/creekorful/osync)."),
         )
         .arg(
             Arg::with_name("log-level")
