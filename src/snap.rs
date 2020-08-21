@@ -25,7 +25,7 @@ impl File {
             description: description.to_string(),
             license: license.to_string(),
             grade: "stable".to_string(),
-            confinement: "strict".to_string(),
+            confinement: "classic".to_string(), // TODO switch to strict when we manage plugs
             parts: Default::default(),
             apps: Default::default(),
         }

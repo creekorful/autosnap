@@ -1,4 +1,4 @@
-use crate::snap::{File, Part};
+use crate::snap::{App, File, Part};
 use std::collections::BTreeMap;
 use std::error::Error;
 
@@ -49,6 +49,17 @@ impl Generator for RustGenerator {
             },
         );
         snap.parts = parts;
+
+        // generate apps
+        let mut apps: BTreeMap<String, App> = BTreeMap::new();
+        apps.insert(
+            snap.name.clone(),
+            App {
+                command: format!("bin/{}", snap.name),
+                plugs: vec![], // TODO
+            },
+        );
+        snap.apps = apps;
 
         Ok(snap)
     }

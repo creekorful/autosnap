@@ -2,6 +2,7 @@ use std::process::exit;
 
 use autosnap::{clone_repo, package_repo};
 use clap::{crate_authors, crate_version, App, AppSettings, Arg};
+use std::fs;
 use url::Url;
 
 fn main() {
@@ -55,5 +56,11 @@ fn main() {
         }
     };
 
-    println!("{}", yaml);
+    // write snap file inside the cloned repository
+    if let Err(e) = fs::write(path.join("snapcraft.yaml"), yaml) {
+        eprintln!("Error encountered while writing snapcraft.yaml: {}", e);
+        exit(1);
+    }
+
+    println!("Successfully packaged {}", src);
 }
