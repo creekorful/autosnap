@@ -1,5 +1,5 @@
 use crate::snap::{App, File, Part};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
 use std::fs;
 use std::path::Path;
@@ -11,6 +11,7 @@ pub trait Generator {
 }
 
 /// Generators contains the list of supported snapcraft generator
+#[derive(Clone)]
 pub enum Generators {
     Rust(RustGenerator),
 }
@@ -25,15 +26,40 @@ impl Generator for Generators {
 
 /// The GeneratorBuilder allow to return specific generator
 /// based on project language
-pub struct GeneratorBuilder {}
+pub struct GeneratorBuilder {
+    generators: HashMap<String, Generators>,
+}
+
+impl Default for GeneratorBuilder {
+    fn default() -> Self {
+        let mut generators: HashMap<String, Generators> = HashMap::new();
+
+        // Fill supported languages here
+        generators.insert("Cargo.toml".to_string(), Generators::Rust(RustGenerator {}));
+
+        GeneratorBuilder { generators }
+    }
+}
 
 impl GeneratorBuilder {
-    pub fn get() -> Generators {
-        Generators::Rust(RustGenerator {})
+    pub fn get<P: AsRef<Path>>(&self, path: P) -> Result<Generators, Box<dyn Error>> {
+        for (extension, generator) in &self.generators {
+            for entry in fs::read_dir(&path)? {
+                let entry = entry?;
+
+                let file_name = entry.file_name().to_str().unwrap().to_string();
+                if entry.path().is_file() && file_name.ends_with(extension) {
+                    return Ok(generator.clone());
+                }
+            }
+        }
+
+        Err("no matching generator found".into())
     }
 }
 
 /// The RustGenerator provide autosnap capability for Rust project
+#[derive(Clone)]
 pub struct RustGenerator {}
 
 impl Generator for RustGenerator {
@@ -84,7 +110,6 @@ impl Generator for RustGenerator {
                 }
             }
         }
-
         snap.apps = apps;
 
         Ok(snap)

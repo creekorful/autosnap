@@ -40,8 +40,14 @@ pub fn package_repo<P: AsRef<Path>>(repo_path: P) -> Result<snap::File, Box<dyn 
 
     let snap = snap::File::new(repo_name, "", "", "");
 
-    // TODO detect project language and use appropriate generator based on that
-    let generator = GeneratorBuilder::get();
+    let generator_builder = GeneratorBuilder::default();
+    let generator = match generator_builder.get(&repo_path) {
+        Ok(generator) => generator,
+        Err(e) => {
+            fs::remove_dir_all(repo_path)?;
+            return Err(e);
+        }
+    };
 
     generator.generate(&snap, &repo_path)
 }
