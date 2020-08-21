@@ -1,3 +1,7 @@
+#[macro_use]
+extern crate log;
+extern crate simple_logger;
+
 mod generator;
 
 use crate::generator::{Generator, GeneratorBuilder};
@@ -37,8 +41,10 @@ pub fn package_repo<P: AsRef<Path>>(repo_path: P) -> Result<snap::File, Box<dyn 
     // TODO Identify the project license
     // using https://github.com/jpeddicord/askalono
 
+    // Create snap with defaults set
     let snap = snap::File::new(repo_name);
 
+    // And use appropriate generator to complete the generation
     let generator_builder = GeneratorBuilder::default();
     let generator = match generator_builder.get(&repo_path) {
         Ok(generator) => generator,

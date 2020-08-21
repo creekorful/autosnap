@@ -91,6 +91,7 @@ impl Generator for RustGenerator {
         // TODO support multiple crates project?
 
         if repo_path.as_ref().join("src").join("main.rs").exists() {
+            debug!("found single executable (name: {})", snap.name);
             apps.insert(
                 snap.name.clone(),
                 App {
@@ -105,6 +106,7 @@ impl Generator for RustGenerator {
                 let file_name = entry.file_name().to_str().unwrap().to_string();
                 if entry.path().is_file() && file_name.ends_with(".rs") {
                     let binary_name = file_name.replace(".rs", "");
+                    debug!("found executable (name: {})", binary_name);
                     apps.insert(
                         binary_name.clone(),
                         App {
@@ -133,6 +135,7 @@ impl Generator for GoGenerator {
         let mod_file = fs::read_to_string(repo_path.as_ref().join("go.mod"))?;
         let line_end = mod_file.chars().position(|s| s == '\n').unwrap();
         let import_path = &mod_file[..line_end].replace("module ", "");
+        debug!("setting go-import-path to {} (using go.mod)", import_path);
 
         // generate parts
         let mut parts: BTreeMap<String, Part> = BTreeMap::new();
@@ -147,6 +150,8 @@ impl Generator for GoGenerator {
             },
         );
         snap.parts = parts;
+
+        // TODO find apps (func main() in package main)
 
         Ok(snap)
     }
