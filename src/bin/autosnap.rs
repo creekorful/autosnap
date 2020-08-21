@@ -45,7 +45,7 @@ fn main() {
             Arg::with_name("src")
                 .value_name("SRC")
                 .required(true)
-                .help("The github repository (example: github.com/creekorful/osync)."),
+                .help("The github repository (example: https://github.com/creekorful/osync)."),
         )
         .setting(AppSettings::ArgRequiredElseHelp)
         .get_matches();
