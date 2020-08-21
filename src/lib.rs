@@ -38,6 +38,7 @@ pub fn package_repo<P: AsRef<Path>>(repo_path: P) -> Result<snap::File, Box<dyn 
     // TODO Identify the project license
     // using https://github.com/jpeddicord/askalono
 
+    // TODO extract summary, description
     let snap = snap::File::new(repo_name, "", "", "");
 
     let generator_builder = GeneratorBuilder::default();

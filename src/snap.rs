@@ -27,7 +27,7 @@ impl File {
             description: description.to_string(),
             license: license.to_string(),
             grade: "stable".to_string(),
-            confinement: "classic".to_string(), // TODO switch to strict when we manage plugs
+            confinement: "devmode".to_string(), // TODO switch to strict when we manage plugs
             parts: Default::default(),
             apps: Default::default(),
         }
@@ -39,11 +39,19 @@ pub struct Part {
     pub plugin: String,
     pub source: String,
     #[serde(rename = "build-packages")]
-    pub build_packages: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub build_packages: Option<Vec<String>>,
+    #[serde(rename = "stage-packages")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stage_packages: Option<Vec<String>>,
+    #[serde(rename = "go-importpath")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub go_import_path: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct App {
     pub command: String,
-    pub plugs: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub plugs: Option<Vec<String>>,
 }

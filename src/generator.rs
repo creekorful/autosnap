@@ -14,12 +14,14 @@ pub trait Generator {
 #[derive(Clone)]
 pub enum Generators {
     Rust(RustGenerator),
+    Go(GoGenerator),
 }
 
 impl Generator for Generators {
     fn generate<P: AsRef<Path>>(&self, snap: &File, repo_path: P) -> Result<File, Box<dyn Error>> {
         match *self {
             Generators::Rust(ref generator) => generator.generate(snap, repo_path),
+            Generators::Go(ref generator) => generator.generate(snap, repo_path),
         }
     }
 }
@@ -36,6 +38,7 @@ impl Default for GeneratorBuilder {
 
         // Fill supported languages here
         generators.insert("Cargo.toml".to_string(), Generators::Rust(RustGenerator {}));
+        generators.insert("go.mod".to_string(), Generators::Go(GoGenerator {}));
 
         GeneratorBuilder { generators }
     }
@@ -73,7 +76,9 @@ impl Generator for RustGenerator {
             Part {
                 plugin: "rust".to_string(),
                 source: ".".to_string(),
-                build_packages: vec!["libc6-dev".to_string()],
+                build_packages: Some(vec!["libc6-dev".to_string()]),
+                stage_packages: None,
+                go_import_path: None,
             },
         );
         snap.parts = parts;
@@ -90,7 +95,7 @@ impl Generator for RustGenerator {
                 snap.name.clone(),
                 App {
                     command: format!("bin/{}", snap.name),
-                    plugs: vec![], // TODO
+                    plugs: None, // TODO
                 },
             );
         } else {
@@ -104,13 +109,44 @@ impl Generator for RustGenerator {
                         binary_name.clone(),
                         App {
                             command: format!("bin/{}", binary_name),
-                            plugs: vec![], // TODO
+                            plugs: None,
                         },
                     );
                 }
             }
         }
         snap.apps = apps;
+
+        Ok(snap)
+    }
+}
+
+/// The RustGenerator provide autosnap capability for Go project
+#[derive(Clone)]
+pub struct GoGenerator {}
+
+impl Generator for GoGenerator {
+    fn generate<P: AsRef<Path>>(&self, snap: &File, repo_path: P) -> Result<File, Box<dyn Error>> {
+        let mut snap = snap.clone();
+
+        // fetch go import path from go.mod
+        let mod_file = fs::read_to_string(repo_path.as_ref().join("go.mod"))?;
+        let line_end = mod_file.chars().position(|s| s == '\n').unwrap();
+        let import_path = &mod_file[..line_end].replace("module ", "");
+
+        // generate parts
+        let mut parts: BTreeMap<String, Part> = BTreeMap::new();
+        parts.insert(
+            snap.name.clone(),
+            Part {
+                plugin: "go".to_string(),
+                source: ".".to_string(),
+                build_packages: Some(vec!["gcc".to_string(), "libc6-dev".to_string()]),
+                stage_packages: None,
+                go_import_path: Some(import_path.to_string()),
+            },
+        );
+        snap.parts = parts;
 
         Ok(snap)
     }
