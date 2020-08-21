@@ -1,3 +1,6 @@
+mod generator;
+
+use crate::generator::{Generator, GeneratorBuilder, Generators};
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::{env, fs};
@@ -36,5 +39,8 @@ pub fn package_repo<P: AsRef<Path>>(repo_path: P) -> Result<snap::File, Box<dyn 
 
     let snap = snap::File::new(repo_name, "", "", "");
 
-    Err("not implemented".into())
+    // TODO detect project language and use appropriate generator based on that
+    let generator = GeneratorBuilder::get();
+
+    generator.generate(&snap)
 }

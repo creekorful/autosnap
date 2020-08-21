@@ -45,4 +45,15 @@ fn main() {
             exit(1);
         }
     };
+
+    // serialize file into yaml
+    let yaml = match serde_yaml::to_string(&snap) {
+        Ok(yaml) => yaml,
+        Err(e) => {
+            eprintln!("Error encountered while serializing snap file: {}", e);
+            exit(1);
+        }
+    };
+
+    println!("{}", yaml);
 }
