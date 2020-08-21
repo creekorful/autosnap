@@ -18,14 +18,14 @@ pub struct File {
 }
 
 impl File {
-    pub fn new(name: &str, summary: &str, description: &str, license: &str) -> File {
+    pub fn new(name: &str) -> File {
         File {
             name: name.to_string(),
             base: "core18".to_string(),
             version: "git".to_string(),
-            summary: summary.to_string(),
-            description: description.to_string(),
-            license: license.to_string(),
+            summary: "TODO".to_string(),
+            description: "TODO".to_string(),
+            license: "TODO".to_string(),
             grade: "stable".to_string(),
             confinement: "devmode".to_string(), // TODO switch to strict when we manage plugs
             parts: Default::default(),

@@ -12,15 +12,15 @@ fn main() {
         .author(crate_authors!())
         .about("Automatically make Snap package from github repository")
         .arg(
-            Arg::with_name("src")
-                .value_name("SRC")
+            Arg::with_name("repo")
+                .value_name("REPO")
                 .required(true)
                 .help("The github repository (example: https://github.com/creekorful/osync)."),
         )
         .setting(AppSettings::ArgRequiredElseHelp)
         .get_matches();
 
-    let src = matches.value_of("src").unwrap().to_string();
+    let src = matches.value_of("repo").unwrap().to_string();
     let src = match Url::parse(&src) {
         Ok(src) => src,
         Err(_) => {
@@ -43,6 +43,7 @@ fn main() {
     let snap = match package_repo(&path) {
         Ok(snap) => snap,
         Err(e) => {
+            fs::remove_dir_all(&path).expect("unable to delete cloned repository");
             eprintln!("Error encountered while packaging repository: {}", e);
             exit(1);
         }
@@ -63,5 +64,13 @@ fn main() {
         exit(1);
     }
 
-    println!("Successfully packaged {}", src);
+    println!("Successfully packaged {}!", snap.name);
+    println!(
+        "The snapcraft file is stored at {}",
+        path.join(SNAPCRAFT_YAML).display()
+    );
+    println!(
+        "Please fix any TODO in the file and run `cd {} && snapcraft`",
+        path.display()
+    );
 }

@@ -2,9 +2,9 @@ mod generator;
 
 use crate::generator::{Generator, GeneratorBuilder};
 use crate::snap::SNAPCRAFT_YAML;
+use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::{env, fs};
 use url::Url;
 
 pub mod snap;
@@ -31,21 +31,18 @@ pub fn package_repo<P: AsRef<Path>>(repo_path: P) -> Result<snap::File, Box<dyn 
             .join(SNAPCRAFT_YAML)
             .exists()
     {
-        fs::remove_dir_all(&repo_path)?;
         return Err(format!("{} is already packaged", repo_name).into());
     }
 
     // TODO Identify the project license
     // using https://github.com/jpeddicord/askalono
 
-    // TODO extract summary, description
-    let snap = snap::File::new(repo_name, "", "", "");
+    let snap = snap::File::new(repo_name);
 
     let generator_builder = GeneratorBuilder::default();
     let generator = match generator_builder.get(&repo_path) {
         Ok(generator) => generator,
         Err(e) => {
-            fs::remove_dir_all(repo_path)?;
             return Err(e);
         }
     };
