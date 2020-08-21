@@ -5,6 +5,7 @@ use std::{env, fs};
 
 use clap::{crate_authors, crate_version, App, AppSettings, Arg};
 use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
 use url::Url;
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -60,13 +61,22 @@ fn main() {
 
     println!("Starting packaging of {}", src);
 
-    if let Err(e) = package(&src) {
+    // first of all clone the remote repository
+    let path = match clone_repo(&src) {
+        Ok(path) => path,
+        Err(e) => {
+            eprintln!("Error encountered while cloning repository: {}", e);
+            exit(1);
+        }
+    };
+
+    if let Err(e) = package_repo(&path) {
         eprintln!("Error encountered while packaging: {}", e);
         exit(1);
     }
 }
 
-fn package(repo_uri: &Url) -> Result<SnapFile, Box<dyn Error>> {
+fn clone_repo(repo_uri: &Url) -> Result<PathBuf, Box<dyn Error>> {
     let cwd = env::current_dir()?;
     let repo_name = repo_uri.path_segments().unwrap().last().unwrap();
     let path = cwd.join(repo_name);
@@ -74,10 +84,22 @@ fn package(repo_uri: &Url) -> Result<SnapFile, Box<dyn Error>> {
     // Clone the repository
     git2::Repository::clone(repo_uri.as_str(), &path)?;
 
+    Ok(path)
+}
+
+fn package_repo<P: AsRef<Path>>(repo_path: P) -> Result<SnapFile, Box<dyn Error>> {
+    let repo_name = repo_path.as_ref().file_name().unwrap().to_str().unwrap();
+
     // Determinate if not already packaged
-    if path.join("snapcraft.yaml").exists() || path.join("snap").join("snapcraft.yaml").exists() {
-        fs::remove_dir_all(path)?;
-        return Err(format!("{} is already packaged", repo_uri).into());
+    if repo_path.as_ref().join("snapcraft.yaml").exists()
+        || repo_path
+            .as_ref()
+            .join("snap")
+            .join("snapcraft.yaml")
+            .exists()
+    {
+        fs::remove_dir_all(&repo_path)?;
+        return Err(format!("{} is already packaged", repo_name).into());
     }
 
     // TODO Identify the project license
