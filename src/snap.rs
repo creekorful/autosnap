@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
+pub const SNAPCRAFT_YAML: &str = "snapcraft.yaml";
+
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct File {
     pub name: String,

@@ -1,12 +1,13 @@
 mod generator;
 
 use crate::generator::{Generator, GeneratorBuilder};
+use crate::snap::SNAPCRAFT_YAML;
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::{env, fs};
 use url::Url;
 
-mod snap;
+pub mod snap;
 
 pub fn clone_repo(repo_uri: &Url) -> Result<PathBuf, Box<dyn Error>> {
     let cwd = env::current_dir()?;
@@ -23,11 +24,11 @@ pub fn package_repo<P: AsRef<Path>>(repo_path: P) -> Result<snap::File, Box<dyn 
     let repo_name = repo_path.as_ref().file_name().unwrap().to_str().unwrap();
 
     // Determinate if not already packaged
-    if repo_path.as_ref().join("snapcraft.yaml").exists()
+    if repo_path.as_ref().join(SNAPCRAFT_YAML).exists()
         || repo_path
             .as_ref()
             .join("snap")
-            .join("snapcraft.yaml")
+            .join(SNAPCRAFT_YAML)
             .exists()
     {
         fs::remove_dir_all(&repo_path)?;
@@ -42,5 +43,5 @@ pub fn package_repo<P: AsRef<Path>>(repo_path: P) -> Result<snap::File, Box<dyn 
     // TODO detect project language and use appropriate generator based on that
     let generator = GeneratorBuilder::get();
 
-    generator.generate(&snap)
+    generator.generate(&snap, &repo_path)
 }

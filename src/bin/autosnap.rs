@@ -1,5 +1,6 @@
 use std::process::exit;
 
+use autosnap::snap::SNAPCRAFT_YAML;
 use autosnap::{clone_repo, package_repo};
 use clap::{crate_authors, crate_version, App, AppSettings, Arg};
 use std::fs;
@@ -57,7 +58,7 @@ fn main() {
     };
 
     // write snap file inside the cloned repository
-    if let Err(e) = fs::write(path.join("snapcraft.yaml"), yaml) {
+    if let Err(e) = fs::write(path.join(SNAPCRAFT_YAML), yaml) {
         eprintln!("Error encountered while writing snapcraft.yaml: {}", e);
         exit(1);
     }
