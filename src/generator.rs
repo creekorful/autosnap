@@ -92,7 +92,7 @@ impl Generator for RustGenerator {
             for package in lock_file.packages {
                 for dependency in package.dependencies {
                     if dependency.name.as_str().starts_with("openssl-")
-                        && !build_packages.contains(&LIBSSL_DEV.to_string()) // TODO improve
+                        && !build_packages.iter().any(|p| p == LIBSSL_DEV)
                     {
                         // watch out for openssl-sys dependencies
                         debug!(
