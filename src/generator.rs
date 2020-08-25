@@ -49,7 +49,7 @@ impl Default for GeneratorBuilder {
             "Cargo.toml".to_string(),
             Generators::Rust(rust::RustGenerator {}),
         );
-        //generators.insert("go.mod".to_string(), Generators::Go(GoGenerator {}));
+        generators.insert("go.mod".to_string(), Generators::Go(go::GoGenerator {})); // TODO better?
 
         GeneratorBuilder { generators }
     }
