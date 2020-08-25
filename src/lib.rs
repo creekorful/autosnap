@@ -2,14 +2,16 @@
 extern crate log;
 extern crate simple_logger;
 
-mod generator;
-
-use crate::generator::{Generator, GeneratorBuilder};
-use crate::snap::SNAPCRAFT_YAML;
 use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
+
 use url::Url;
+
+use crate::generator::{Generator, GeneratorBuilder};
+use crate::snap::SNAPCRAFT_YAML;
+
+mod generator;
 
 pub mod snap;
 
@@ -27,15 +29,18 @@ pub fn fetch_source(source_url: &Url) -> Result<PathBuf, Box<dyn Error>> {
 }
 
 pub fn package_source<P: AsRef<Path>>(source_path: P) -> Result<snap::File, Box<dyn Error>> {
-    let source_name = source_path.as_ref().file_name().unwrap().to_str().unwrap();
+    // convert . into current dir
+    let source_path = if source_path.as_ref().eq(Path::new(".")) {
+        env::current_dir()?
+    } else {
+        source_path.as_ref().to_path_buf()
+    };
+
+    let source_name = source_path.file_name().unwrap().to_str().unwrap();
 
     // Determinate if not already packaged
-    if source_path.as_ref().join(SNAPCRAFT_YAML).exists()
-        || source_path
-            .as_ref()
-            .join("snap")
-            .join(SNAPCRAFT_YAML)
-            .exists()
+    if source_path.join(SNAPCRAFT_YAML).exists()
+        || source_path.join("snap").join(SNAPCRAFT_YAML).exists()
     {
         return Err(format!("{} is already packaged", source_name).into());
     }

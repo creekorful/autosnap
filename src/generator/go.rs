@@ -1,8 +1,8 @@
-use std::{fs, io};
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
+use std::{fs, io};
 
 use crate::generator::Generator;
 use crate::snap::{App, File, Part};
