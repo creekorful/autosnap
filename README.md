@@ -1,6 +1,6 @@
 # Autosnap
 
-Automatically make Snap package from github repository.
+Automatically make Snap package from git repository.
 
 Example:
 
