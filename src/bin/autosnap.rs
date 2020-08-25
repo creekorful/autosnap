@@ -5,7 +5,7 @@ extern crate simple_logger;
 use std::process::exit;
 
 use autosnap::snap::SNAPCRAFT_YAML;
-use autosnap::{clone_repo, package_repo};
+use autosnap::{fetch_source, package_source};
 use clap::{crate_authors, crate_version, App, AppSettings, Arg};
 use log::Level;
 use std::fs;
@@ -16,12 +16,12 @@ fn main() {
     let matches = App::new("autosnap")
         .version(crate_version!())
         .author(crate_authors!())
-        .about("Automatically make Snap package from git repository")
+        .about("Automatically make Snap package from source code")
         .arg(
-            Arg::with_name("repo")
-                .value_name("REPO")
+            Arg::with_name("source")
+                .value_name("SRC")
                 .required(true)
-                .help("The git repository (example: https://github.com/creekorful/osync)."),
+                .help("The source location (example: https://github.com/creekorful/osync)."),
         )
         .arg(
             Arg::with_name("log-level")
@@ -42,31 +42,27 @@ fn main() {
     };
     simple_logger::init_with_level(log_level).unwrap();
 
-    let src = matches.value_of("repo").unwrap().to_string();
-    let src = match Url::parse(&src) {
-        Ok(src) => src,
-        Err(_) => {
-            error!("Invalid repository url {}", src);
-            exit(1);
-        }
-    };
+    let src = matches.value_of("source").unwrap().to_string();
 
     info!("Starting packaging of {}", src);
 
-    // first of all clone the remote repository
-    let path = match clone_repo(&src) {
-        Ok(path) => path,
-        Err(e) => {
-            error!("Error encountered while cloning repository: {}", e);
-            exit(1);
-        }
+    // first of all, if its a remote source, fetch it
+    let path = match Url::parse(&src) {
+        Ok(src) => match fetch_source(&src) {
+            Ok(path) => path,
+            Err(e) => {
+                error!("Error while fetching source: {}", e);
+                exit(1);
+            }
+        },
+        Err(_) => src.into(),
     };
 
-    let snap = match package_repo(&path) {
+    // package the source code
+    let snap = match package_source(&path) {
         Ok(snap) => snap,
         Err(e) => {
-            fs::remove_dir_all(&path).expect("unable to delete cloned repository");
-            error!("Error encountered while packaging repository: {}", e);
+            error!("Error encountered while packaging source: {}", e);
             exit(1);
         }
     };
@@ -80,7 +76,7 @@ fn main() {
         }
     };
 
-    // write snap file inside the cloned repository
+    // write snap file inside the source root
     if let Err(e) = fs::write(path.join(SNAPCRAFT_YAML), yaml) {
         error!("Error encountered while writing {}: {}", SNAPCRAFT_YAML, e);
         exit(1);

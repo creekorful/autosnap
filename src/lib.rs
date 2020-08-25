@@ -13,45 +13,47 @@ use url::Url;
 
 pub mod snap;
 
-pub fn clone_repo(repo_uri: &Url) -> Result<PathBuf, Box<dyn Error>> {
-    let cwd = env::current_dir()?;
-    let repo_name = repo_uri.path_segments().unwrap().last().unwrap();
-    let path = cwd.join(repo_name);
+pub fn fetch_source(source_url: &Url) -> Result<PathBuf, Box<dyn Error>> {
+    // TODO support tarball etc
 
-    // Clone the repository
-    git2::Repository::clone(repo_uri.as_str(), &path)?;
+    let cwd = env::current_dir()?;
+    let source_name = source_url.path_segments().unwrap().last().unwrap();
+    let path = cwd.join(source_name);
+
+    // Clone the source code
+    git2::Repository::clone(source_url.as_str(), &path)?;
 
     Ok(path)
 }
 
-pub fn package_repo<P: AsRef<Path>>(repo_path: P) -> Result<snap::File, Box<dyn Error>> {
-    let repo_name = repo_path.as_ref().file_name().unwrap().to_str().unwrap();
+pub fn package_source<P: AsRef<Path>>(source_path: P) -> Result<snap::File, Box<dyn Error>> {
+    let source_name = source_path.as_ref().file_name().unwrap().to_str().unwrap();
 
     // Determinate if not already packaged
-    if repo_path.as_ref().join(SNAPCRAFT_YAML).exists()
-        || repo_path
+    if source_path.as_ref().join(SNAPCRAFT_YAML).exists()
+        || source_path
             .as_ref()
             .join("snap")
             .join(SNAPCRAFT_YAML)
             .exists()
     {
-        return Err(format!("{} is already packaged", repo_name).into());
+        return Err(format!("{} is already packaged", source_name).into());
     }
 
     // TODO Identify the project license
     // using https://github.com/jpeddicord/askalono
 
     // Create snap with defaults set
-    let snap = snap::File::new(repo_name);
+    let snap = snap::File::new(source_name);
 
     // And use appropriate generator to complete the generation
     let generator_builder = GeneratorBuilder::default();
-    let generator = match generator_builder.get(&repo_path) {
+    let generator = match generator_builder.get(&source_path) {
         Ok(generator) => generator,
         Err(e) => {
             return Err(e);
         }
     };
 
-    generator.generate(&snap, &repo_path)
+    generator.generate(&snap, &source_path)
 }
