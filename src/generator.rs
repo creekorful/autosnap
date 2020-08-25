@@ -1,13 +1,18 @@
 use crate::snap::{App, File, Part};
+use cargo_lock::Lockfile;
 use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
 use std::fs;
 use std::path::Path;
 
+const CARGO_LOCK: &str = "Cargo.lock";
+const LIBSSL_DEV: &str = "libssl-dev";
+
 /// A Generator is a autosnap extension that know how to package
 /// a specific language.
 pub trait Generator {
-    fn generate<P: AsRef<Path>>(&self, snap: &File, repo_path: P) -> Result<File, Box<dyn Error>>;
+    fn generate<P: AsRef<Path>>(&self, snap: &File, source_path: P)
+        -> Result<File, Box<dyn Error>>;
 }
 
 /// Generators contains the list of supported snapcraft generator
@@ -18,10 +23,14 @@ pub enum Generators {
 }
 
 impl Generator for Generators {
-    fn generate<P: AsRef<Path>>(&self, snap: &File, repo_path: P) -> Result<File, Box<dyn Error>> {
+    fn generate<P: AsRef<Path>>(
+        &self,
+        snap: &File,
+        source_path: P,
+    ) -> Result<File, Box<dyn Error>> {
         match *self {
-            Generators::Rust(ref generator) => generator.generate(snap, repo_path),
-            Generators::Go(ref generator) => generator.generate(snap, repo_path),
+            Generators::Rust(ref generator) => generator.generate(snap, source_path),
+            Generators::Go(ref generator) => generator.generate(snap, source_path),
         }
     }
 }
@@ -66,8 +75,35 @@ impl GeneratorBuilder {
 pub struct RustGenerator {}
 
 impl Generator for RustGenerator {
-    fn generate<P: AsRef<Path>>(&self, snap: &File, repo_path: P) -> Result<File, Box<dyn Error>> {
+    fn generate<P: AsRef<Path>>(
+        &self,
+        snap: &File,
+        source_path: P,
+    ) -> Result<File, Box<dyn Error>> {
         let mut snap = snap.clone();
+
+        // generate parts
+        let mut build_packages = vec!["libc6-dev".to_string()];
+
+        // Determinate custom build packages based on cargo.lock
+        if source_path.as_ref().join(CARGO_LOCK).exists() {
+            let lock_file = Lockfile::load(source_path.as_ref().join(CARGO_LOCK))?;
+
+            for package in lock_file.packages {
+                for dependency in package.dependencies {
+                    if dependency.name.as_str().starts_with("openssl-")
+                        && !build_packages.contains(&LIBSSL_DEV.to_string()) // TODO improve
+                    {
+                        // watch out for openssl-sys dependencies
+                        debug!(
+                            "Adding {} build package as required by {}",
+                            LIBSSL_DEV, package.name
+                        );
+                        build_packages.push(LIBSSL_DEV.to_string());
+                    }
+                }
+            }
+        }
 
         // generate parts
         let mut parts: BTreeMap<String, Part> = BTreeMap::new();
@@ -76,7 +112,7 @@ impl Generator for RustGenerator {
             Part {
                 plugin: "rust".to_string(),
                 source: ".".to_string(),
-                build_packages: Some(vec!["libc6-dev".to_string()]),
+                build_packages: Option::from(build_packages),
                 stage_packages: None,
                 go_import_path: None,
             },
@@ -90,7 +126,7 @@ impl Generator for RustGenerator {
         // otherwise it will contains as many binaries as there is file matching src/bin/*.rs
         // TODO support multiple crates project?
 
-        if repo_path.as_ref().join("src").join("main.rs").exists() {
+        if source_path.as_ref().join("src").join("main.rs").exists() {
             debug!("found single executable (name: {})", snap.name);
             apps.insert(
                 snap.name.clone(),
@@ -100,7 +136,7 @@ impl Generator for RustGenerator {
                 },
             );
         } else {
-            for entry in fs::read_dir(repo_path.as_ref().join("src").join("bin"))? {
+            for entry in fs::read_dir(source_path.as_ref().join("src").join("bin"))? {
                 let entry = entry?;
 
                 let file_name = entry.file_name().to_str().unwrap().to_string();
@@ -128,11 +164,15 @@ impl Generator for RustGenerator {
 pub struct GoGenerator {}
 
 impl Generator for GoGenerator {
-    fn generate<P: AsRef<Path>>(&self, snap: &File, repo_path: P) -> Result<File, Box<dyn Error>> {
+    fn generate<P: AsRef<Path>>(
+        &self,
+        snap: &File,
+        source_path: P,
+    ) -> Result<File, Box<dyn Error>> {
         let mut snap = snap.clone();
 
         // fetch go import path from go.mod
-        let mod_file = fs::read_to_string(repo_path.as_ref().join("go.mod"))?;
+        let mod_file = fs::read_to_string(source_path.as_ref().join("go.mod"))?;
         let line_end = mod_file.chars().position(|s| s == '\n').unwrap();
         let import_path = &mod_file[..line_end].replace("module ", "");
         debug!("setting go-import-path to {} (using go.mod)", import_path);

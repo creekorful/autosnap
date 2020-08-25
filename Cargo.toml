@@ -15,3 +15,4 @@ serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
 log = "0.4.11"
 simple_logger = "1.6.0"
+cargo-lock = "4.0.1"
