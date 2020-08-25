@@ -1,10 +1,10 @@
-use std::path::Path;
-use crate::snap::{File, Part, App};
-use std::error::Error;
+use crate::generator::Generator;
+use crate::snap::{App, File, Part};
 use cargo_lock::Lockfile;
 use std::collections::BTreeMap;
+use std::error::Error;
 use std::fs;
-use crate::generator::Generator;
+use std::path::Path;
 
 const CARGO_LOCK: &str = "Cargo.lock";
 const LIBSSL_DEV: &str = "libssl-dev";

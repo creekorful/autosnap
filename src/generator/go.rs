@@ -1,9 +1,9 @@
 use crate::generator::Generator;
-use std::path::Path;
 use crate::snap::{File, Part};
-use std::error::Error;
 use std::collections::BTreeMap;
+use std::error::Error;
 use std::fs;
+use std::path::Path;
 
 /// The RustGenerator provide autosnap capability for Go project
 #[derive(Clone)]
