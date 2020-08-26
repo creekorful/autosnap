@@ -20,12 +20,8 @@ struct ModFile {
 pub struct GoGenerator {}
 
 impl Generator for GoGenerator {
-    fn generate<P: AsRef<Path>>(
-        &self,
-        snap: &File,
-        source_path: P,
-    ) -> Result<File, Box<dyn Error>> {
-        let mut snap = snap.clone();
+    fn generate<P: AsRef<Path>>(&self, snap: File, source_path: P) -> Result<File, Box<dyn Error>> {
+        let mut snap = snap;
 
         // fetch go import path from go.mod
         let mod_file = parse_mod(source_path.as_ref().join("go.mod"))?;

@@ -60,5 +60,5 @@ pub fn package_source<P: AsRef<Path>>(source_path: P) -> Result<snap::File, Box<
         }
     };
 
-    generator.generate(&snap, &source_path)
+    generator.generate(snap, &source_path)
 }

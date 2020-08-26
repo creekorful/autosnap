@@ -10,8 +10,7 @@ mod rust;
 /// A Generator is a autosnap extension that know how to package
 /// a specific language.
 pub trait Generator {
-    fn generate<P: AsRef<Path>>(&self, snap: &File, source_path: P)
-        -> Result<File, Box<dyn Error>>;
+    fn generate<P: AsRef<Path>>(&self, snap: File, source_path: P) -> Result<File, Box<dyn Error>>;
 }
 
 /// Generators contains the list of supported snapcraft generator
@@ -22,11 +21,7 @@ pub enum Generators {
 }
 
 impl Generator for Generators {
-    fn generate<P: AsRef<Path>>(
-        &self,
-        snap: &File,
-        source_path: P,
-    ) -> Result<File, Box<dyn Error>> {
+    fn generate<P: AsRef<Path>>(&self, snap: File, source_path: P) -> Result<File, Box<dyn Error>> {
         match *self {
             Generators::Rust(ref generator) => generator.generate(snap, source_path),
             Generators::Go(ref generator) => generator.generate(snap, source_path),

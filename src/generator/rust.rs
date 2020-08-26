@@ -14,12 +14,20 @@ const LIBSSL_DEV: &str = "libssl-dev";
 pub struct RustGenerator {}
 
 impl Generator for RustGenerator {
-    fn generate<P: AsRef<Path>>(
-        &self,
-        snap: &File,
-        source_path: P,
-    ) -> Result<File, Box<dyn Error>> {
-        let mut snap = snap.clone();
+    fn generate<P: AsRef<Path>>(&self, snap: File, source_path: P) -> Result<File, Box<dyn Error>> {
+        let mut snap = snap;
+
+        // Parse Cargo.toml to extract and prefill data
+        let cargo = cargo_toml::Manifest::from_path(source_path.as_ref().join("Cargo.toml"))?;
+        if let Some(package) = cargo.package {
+            debug!("extract snap name ({}) from Cargo.toml", package.name);
+            snap.name = package.name;
+
+            if let Some(license) = package.license {
+                debug!("extract snap license ({}) from Cargo.toml", license);
+                snap.license = license;
+            }
+        }
 
         // generate parts
         let mut build_packages = vec!["libc6-dev".to_string()];
