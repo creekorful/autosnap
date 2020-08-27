@@ -8,18 +8,17 @@ use std::path::{Path, PathBuf};
 
 use url::Url;
 
-use crate::generator::{Generator, GeneratorBuilder};
+use crate::generator::{Generator, GeneratorBuilder, Options, Version};
 use crate::snap::SNAPCRAFT_YAML;
 
-mod generator;
-
+pub mod generator;
 pub mod snap;
 
 pub fn fetch_source(source_url: &Url) -> Result<PathBuf, Box<dyn Error>> {
     // TODO support tarball etc
 
     let cwd = env::current_dir()?;
-    let source_name = source_url.path_segments().unwrap().last().unwrap();
+    let source_name = source_url.path_segments().unwrap().last().unwrap().replace(".git", "");
     let path = cwd.join(source_name);
 
     // Clone the source code
@@ -28,7 +27,10 @@ pub fn fetch_source(source_url: &Url) -> Result<PathBuf, Box<dyn Error>> {
     Ok(path)
 }
 
-pub fn package_source<P: AsRef<Path>>(source_path: P) -> Result<snap::File, Box<dyn Error>> {
+pub fn package_source<P: AsRef<Path>>(
+    source_path: P,
+    options: &Options,
+) -> Result<snap::File, Box<dyn Error>> {
     // convert . into current dir
     let source_path = if source_path.as_ref().eq(Path::new(".")) {
         env::current_dir()?
@@ -49,7 +51,16 @@ pub fn package_source<P: AsRef<Path>>(source_path: P) -> Result<snap::File, Box<
     // using https://github.com/jpeddicord/askalono
 
     // Create snap with defaults set
-    let snap = snap::File::new(source_name);
+    let mut snap = snap::File::new(source_name);
+
+    match &options.snap_version {
+        Version::Git => snap.version = "git".to_string(),
+        Version::Fixed(version) => {
+            debug!("Set snap version to {}", version);
+            snap.version = version.clone()
+        }
+        _ => {}
+    }
 
     // And use appropriate generator to complete the generation
     let generator_builder = GeneratorBuilder::default();
@@ -60,5 +71,5 @@ pub fn package_source<P: AsRef<Path>>(source_path: P) -> Result<snap::File, Box<
         }
     };
 
-    generator.generate(snap, &source_path)
+    generator.generate(snap, &source_path, &options)
 }

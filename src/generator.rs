@@ -6,10 +6,41 @@ use crate::snap::File;
 mod go;
 mod rust;
 
+/// This enum describe the snap version
+#[derive(PartialEq)]
+pub enum Version {
+    /// Version will be set to "git" i.e Snapcraft will set snap version using git
+    Git,
+    /// Version will be set by autosnap if possible (i.e by trying to parse Cargo.toml, etc...)
+    Auto,
+    /// Version will be set as provided
+    Fixed(String),
+}
+
+/// Convert a string into his Version representation
+impl From<&str> for Version {
+    fn from(s: &str) -> Self {
+        match s {
+            "git" => Version::Git,
+            "auto" => Version::Auto,
+            version => Version::Fixed(version.to_string()),
+        }
+    }
+}
+
+pub struct Options {
+    pub snap_version: Version,
+}
+
 /// A Generator is a autosnap extension that know how to package
 /// a specific language.
 pub trait Generator {
-    fn generate<P: AsRef<Path>>(&self, snap: File, source_path: P) -> Result<File, Box<dyn Error>>;
+    fn generate<P: AsRef<Path>>(
+        &self,
+        snap: File,
+        source_path: P,
+        options: &Options,
+    ) -> Result<File, Box<dyn Error>>;
     fn can_generate<P: AsRef<Path>>(&self, source_path: P) -> bool;
 }
 
@@ -21,10 +52,15 @@ pub enum Generators {
 }
 
 impl Generator for Generators {
-    fn generate<P: AsRef<Path>>(&self, snap: File, source_path: P) -> Result<File, Box<dyn Error>> {
+    fn generate<P: AsRef<Path>>(
+        &self,
+        snap: File,
+        source_path: P,
+        options: &Options,
+    ) -> Result<File, Box<dyn Error>> {
         match *self {
-            Generators::Rust(ref generator) => generator.generate(snap, source_path),
-            Generators::Go(ref generator) => generator.generate(snap, source_path),
+            Generators::Rust(ref generator) => generator.generate(snap, source_path, options),
+            Generators::Go(ref generator) => generator.generate(snap, source_path, options),
         }
     }
 

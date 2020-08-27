@@ -4,7 +4,7 @@ use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::{fs, io};
 
-use crate::generator::Generator;
+use crate::generator::{Generator, Options};
 use crate::snap::{App, File, Part};
 
 // the go.mod file
@@ -12,7 +12,6 @@ use crate::snap::{App, File, Part};
 struct ModFile {
     pub go_version: String,
     pub import_path: String,
-    // TODO dependencies etc
 }
 
 /// The GoGenerator provide autosnap capability for Go project
@@ -20,13 +19,18 @@ struct ModFile {
 pub struct GoGenerator {}
 
 impl Generator for GoGenerator {
-    fn generate<P: AsRef<Path>>(&self, snap: File, source_path: P) -> Result<File, Box<dyn Error>> {
+    fn generate<P: AsRef<Path>>(
+        &self,
+        snap: File,
+        source_path: P,
+        _options: &Options,
+    ) -> Result<File, Box<dyn Error>> {
         let mut snap = snap;
 
         // fetch go import path from go.mod
         let mod_file = parse_mod(source_path.as_ref().join("go.mod"))?;
         debug!(
-            "setting go-import-path to {} (using go.mod)",
+            "Setting go-import-path to {} (using go.mod)",
             mod_file.import_path
         );
 
@@ -87,7 +91,7 @@ fn find_executables<P: AsRef<Path>>(path: P) -> Result<Vec<String>, Box<dyn Erro
                 let content = fs::read_to_string(entry.path())?;
                 if content.contains("package main") && content.contains("func main()") {
                     let executable_name = filename.replace(".go", "");
-                    debug!("found executable (name: {})", executable_name);
+                    debug!("Found executable (name: {})", executable_name);
                     executables.push(executable_name);
                 }
             }

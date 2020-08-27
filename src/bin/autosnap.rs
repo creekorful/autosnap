@@ -4,6 +4,7 @@ extern crate simple_logger;
 
 use std::process::exit;
 
+use autosnap::generator::{Options, Version};
 use autosnap::snap::SNAPCRAFT_YAML;
 use autosnap::{fetch_source, package_source};
 use clap::{crate_authors, crate_version, App, AppSettings, Arg};
@@ -27,6 +28,12 @@ fn main() {
             Arg::with_name("log-level")
                 .long("log-level")
                 .default_value("info"),
+        )
+        .arg(
+            Arg::with_name("snap-version")
+                .long("snap-version")
+                .default_value("git")
+                .help("Set the snap version (git, auto, or fixed: 0.2.0)"),
         )
         .setting(AppSettings::ArgRequiredElseHelp)
         .get_matches();
@@ -58,8 +65,13 @@ fn main() {
         Err(_) => src.into(),
     };
 
+    // build options
+    let options = Options {
+        snap_version: Version::from(matches.value_of("snap-version").unwrap()),
+    };
+
     // package the source code
-    let snap = match package_source(&path) {
+    let snap = match package_source(&path, &options) {
         Ok(snap) => snap,
         Err(e) => {
             error!("Error encountered while packaging source: {}", e);

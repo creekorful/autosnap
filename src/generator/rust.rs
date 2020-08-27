@@ -1,4 +1,4 @@
-use crate::generator::Generator;
+use crate::generator::{Generator, Options, Version};
 use crate::snap::{App, File, Part};
 use cargo_lock::Lockfile;
 use std::collections::BTreeMap;
@@ -14,23 +14,33 @@ const LIBSSL_DEV: &str = "libssl-dev";
 pub struct RustGenerator {}
 
 impl Generator for RustGenerator {
-    fn generate<P: AsRef<Path>>(&self, snap: File, source_path: P) -> Result<File, Box<dyn Error>> {
+    fn generate<P: AsRef<Path>>(
+        &self,
+        snap: File,
+        source_path: P,
+        options: &Options,
+    ) -> Result<File, Box<dyn Error>> {
         let mut snap = snap;
 
         // Parse Cargo.toml to extract and prefill data
         let cargo = cargo_toml::Manifest::from_path(source_path.as_ref().join("Cargo.toml"))?;
         if let Some(package) = cargo.package {
-            debug!("extract snap name ({}) from Cargo.toml", package.name);
+            debug!("Extract snap name ({}) from Cargo.toml", package.name);
             snap.name = package.name;
 
             if let Some(license) = package.license {
-                debug!("extract snap license ({}) from Cargo.toml", license);
+                debug!("Extract snap license ({}) from Cargo.toml", license);
                 snap.license = license;
             }
 
             if let Some(description) = package.description {
-                debug!("extract snap summary from Cargo.toml");
+                debug!("Extract snap summary from Cargo.toml");
                 snap.summary = description;
+            }
+
+            if options.snap_version == Version::Auto {
+                debug!("Extract snap version ({}) from Cargo.toml", package.version);
+                snap.version = package.version;
             }
         }
 
@@ -79,7 +89,7 @@ impl Generator for RustGenerator {
         // TODO support multiple crates project?
 
         if source_path.as_ref().join("src").join("main.rs").exists() {
-            debug!("found single executable (name: {})", snap.name);
+            debug!("Found single executable (name: {})", snap.name);
             apps.insert(
                 snap.name.clone(),
                 App {
@@ -94,7 +104,7 @@ impl Generator for RustGenerator {
                 let file_name = entry.file_name().to_str().unwrap().to_string();
                 if entry.path().is_file() && file_name.ends_with(".rs") {
                     let binary_name = file_name.replace(".rs", "");
-                    debug!("found executable (name: {})", binary_name);
+                    debug!("Found executable (name: {})", binary_name);
                     apps.insert(
                         binary_name.clone(),
                         App {

@@ -22,11 +22,11 @@ impl File {
         File {
             name: name.to_string(),
             base: "core18".to_string(),
-            version: "git".to_string(),
+            version: "TODO".to_string(),
             summary: "TODO".to_string(),
             description: "TODO".to_string(),
             license: "TODO".to_string(),
-            grade: "stable".to_string(),
+            grade: "edge".to_string(),
             confinement: "devmode".to_string(), // TODO switch to strict when we manage plugs
             parts: Default::default(),
             apps: Default::default(),
