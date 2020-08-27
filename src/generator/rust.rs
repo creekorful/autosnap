@@ -27,6 +27,11 @@ impl Generator for RustGenerator {
                 debug!("extract snap license ({}) from Cargo.toml", license);
                 snap.license = license;
             }
+
+            if let Some(description) = package.description {
+                debug!("extract snap summary from Cargo.toml");
+                snap.summary = description;
+            }
         }
 
         // generate parts
