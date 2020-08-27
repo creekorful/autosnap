@@ -1,8 +1,7 @@
-use crate::snap::File;
-use std::collections::HashMap;
 use std::error::Error;
-use std::fs;
 use std::path::Path;
+
+use crate::snap::File;
 
 mod go;
 mod rust;
@@ -11,6 +10,7 @@ mod rust;
 /// a specific language.
 pub trait Generator {
     fn generate<P: AsRef<Path>>(&self, snap: File, source_path: P) -> Result<File, Box<dyn Error>>;
+    fn can_generate<P: AsRef<Path>>(&self, source_path: P) -> bool;
 }
 
 /// Generators contains the list of supported snapcraft generator
@@ -27,39 +27,35 @@ impl Generator for Generators {
             Generators::Go(ref generator) => generator.generate(snap, source_path),
         }
     }
+
+    fn can_generate<P: AsRef<Path>>(&self, source_path: P) -> bool {
+        match *self {
+            Generators::Rust(ref generator) => generator.can_generate(&source_path),
+            Generators::Go(ref generator) => generator.can_generate(&source_path),
+        }
+    }
 }
 
 /// The GeneratorBuilder allow to return specific generator
 /// based on project language
 pub struct GeneratorBuilder {
-    generators: HashMap<String, Generators>,
+    generators: Vec<Generators>,
 }
 
 impl Default for GeneratorBuilder {
     fn default() -> Self {
-        let mut generators: HashMap<String, Generators> = HashMap::new();
-
-        // Fill supported languages here
-        generators.insert(
-            "Cargo.toml".to_string(),
-            Generators::Rust(rust::RustGenerator {}),
-        );
-        generators.insert("go.mod".to_string(), Generators::Go(go::GoGenerator {})); // TODO better?
-
+        let mut generators: Vec<Generators> = Vec::new();
+        generators.push(Generators::Rust(rust::RustGenerator {}));
+        generators.push(Generators::Go(go::GoGenerator {}));
         GeneratorBuilder { generators }
     }
 }
 
 impl GeneratorBuilder {
-    pub fn get<P: AsRef<Path>>(&self, path: P) -> Result<Generators, Box<dyn Error>> {
-        for (extension, generator) in &self.generators {
-            for entry in fs::read_dir(&path)? {
-                let entry = entry?;
-
-                let file_name = entry.file_name().to_str().unwrap().to_string();
-                if entry.path().is_file() && file_name.ends_with(extension) {
-                    return Ok(generator.clone());
-                }
+    pub fn get<P: AsRef<Path>>(&self, source_path: P) -> Result<Generators, Box<dyn Error>> {
+        for generator in &self.generators {
+            if generator.can_generate(&source_path) {
+                return Ok(generator.clone());
             }
         }
 

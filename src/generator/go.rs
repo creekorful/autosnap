@@ -15,7 +15,7 @@ struct ModFile {
     // TODO dependencies etc
 }
 
-/// The RustGenerator provide autosnap capability for Go project
+/// The GoGenerator provide autosnap capability for Go project
 #[derive(Clone)]
 pub struct GoGenerator {}
 
@@ -63,6 +63,10 @@ impl Generator for GoGenerator {
         snap.apps = apps;
 
         Ok(snap)
+    }
+
+    fn can_generate<P: AsRef<Path>>(&self, source_path: P) -> bool {
+        source_path.as_ref().join("go.mod").exists() // TODO improve
     }
 }
 

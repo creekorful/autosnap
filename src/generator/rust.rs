@@ -104,4 +104,8 @@ impl Generator for RustGenerator {
 
         Ok(snap)
     }
+
+    fn can_generate<P: AsRef<Path>>(&self, source_path: P) -> bool {
+        source_path.as_ref().join("Cargo.toml").exists()
+    }
 }
