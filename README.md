@@ -1,5 +1,7 @@
 # Autosnap
 
+![Crates.io](https://img.shields.io/crates/v/autosnap)
+
 Automatically make Snap package from source code.
 
 Examples:
