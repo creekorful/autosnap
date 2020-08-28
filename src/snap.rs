@@ -12,9 +12,30 @@ pub struct File {
     pub description: String,
     pub license: String,
     pub grade: String,
-    pub confinement: String,
+    pub confinement: Confinement,
     pub parts: BTreeMap<String, Part>,
     pub apps: BTreeMap<String, App>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
+pub enum Confinement {
+    #[serde(rename = "devmode")]
+    Devmode,
+    #[serde(rename = "classic")]
+    Classic,
+    #[serde(rename = "strict")]
+    Strict,
+}
+
+impl From<&str> for Confinement {
+    fn from(s: &str) -> Self {
+        match s {
+            "devmode" => Confinement::Devmode,
+            "classic" => Confinement::Classic,
+            "strict" => Confinement::Strict,
+            _ => Confinement::Classic,
+        }
+    }
 }
 
 impl File {
@@ -26,8 +47,8 @@ impl File {
             summary: "TODO".to_string(),
             description: "TODO".to_string(),
             license: "TODO".to_string(),
-            grade: "edge".to_string(),
-            confinement: "devmode".to_string(), // TODO switch to strict when we manage plugs
+            grade: "stable".to_string(),
+            confinement: Confinement::Classic,
             parts: Default::default(),
             apps: Default::default(),
         }

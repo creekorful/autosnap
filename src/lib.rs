@@ -18,7 +18,12 @@ pub fn fetch_source(source_url: &Url) -> Result<PathBuf, Box<dyn Error>> {
     // TODO support tarball etc
 
     let cwd = env::current_dir()?;
-    let source_name = source_url.path_segments().unwrap().last().unwrap().replace(".git", "");
+    let source_name = source_url
+        .path_segments()
+        .unwrap()
+        .last()
+        .unwrap()
+        .replace(".git", "");
     let path = cwd.join(source_name);
 
     // Clone the source code
@@ -53,6 +58,7 @@ pub fn package_source<P: AsRef<Path>>(
     // Create snap with defaults set
     let mut snap = snap::File::new(source_name);
 
+    // Set the version if possible
     match &options.snap_version {
         Version::Git => snap.version = "git".to_string(),
         Version::Fixed(version) => {

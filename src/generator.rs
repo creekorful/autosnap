@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::path::Path;
 
-use crate::snap::File;
+use crate::snap::{Confinement, File};
 
 mod go;
 mod rust;
@@ -30,6 +30,7 @@ impl From<&str> for Version {
 
 pub struct Options {
     pub snap_version: Version,
+    pub snap_confinement: Confinement,
 }
 
 /// A Generator is a autosnap extension that know how to package
