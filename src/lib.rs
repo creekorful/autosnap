@@ -1,24 +1,27 @@
-#[macro_use]
-extern crate log;
-extern crate simple_logger;
-
-use std::env;
-use std::error::Error;
-use std::path::{Path, PathBuf};
-
-use url::Url;
-
 use crate::generator::{Generator, GeneratorBuilder, Options, Version};
 use crate::snap::SNAPCRAFT_YAML;
 
+use askalono::{Store, TextData};
+use std::error::Error;
+use std::path::{Path, PathBuf};
+use std::{env, fs, io};
+use url::Url;
+
 pub mod generator;
 pub mod snap;
+
+static LICENSE_CACHE: &[u8] = include_bytes!("embedded-cache.bin.zstd");
 
 pub fn fetch_source(source_url: &Url) -> Result<PathBuf, Box<dyn Error>> {
     // TODO support tarball etc
 
     let cwd = env::current_dir()?;
-    let source_name = source_url.path_segments().unwrap().last().unwrap().replace(".git", "");
+    let source_name = source_url
+        .path_segments()
+        .unwrap()
+        .last()
+        .unwrap()
+        .replace(".git", "");
     let path = cwd.join(source_name);
 
     // Clone the source code
@@ -56,10 +59,26 @@ pub fn package_source<P: AsRef<Path>>(
     match &options.snap_version {
         Version::Git => snap.version = "git".to_string(),
         Version::Fixed(version) => {
-            debug!("Set snap version to {}", version);
+            log::debug!("Set snap version to {}", version);
             snap.version = version.clone()
         }
         _ => {}
+    }
+
+    // Try to autodetect license if possible
+    if let Some((license, filename)) = find_license(&source_path)? {
+        let store = Store::from_cache(LICENSE_CACHE)?;
+        let result = store.analyze(&TextData::from(license));
+
+        // TODO use real value above
+        if result.score > 0.9 {
+            snap.license = result.name.to_string();
+            log::debug!(
+                "Auto-detect snap license ({}) from file {}",
+                result.name,
+                filename
+            );
+        }
     }
 
     // And use appropriate generator to complete the generation
@@ -72,4 +91,19 @@ pub fn package_source<P: AsRef<Path>>(
     };
 
     generator.generate(snap, &source_path, &options)
+}
+
+fn find_license<P: AsRef<Path>>(source_path: P) -> Result<Option<(String, String)>, io::Error> {
+    if source_path.as_ref().join("LICENSE").exists() {
+        fs::read_to_string(source_path.as_ref().join("LICENSE"))
+            .map(|v| Some((v, "LICENSE".to_string())))
+    } else if source_path.as_ref().join("LICENSE.md").exists() {
+        fs::read_to_string(source_path.as_ref().join("LICENSE.md"))
+            .map(|v| Some((v, "LICENSE.md".to_string())))
+    } else if source_path.as_ref().join("COPYING").exists() {
+        fs::read_to_string(source_path.as_ref().join("COPYING"))
+            .map(|v| Some((v, "COPYING".to_string())))
+    } else {
+        Ok(None)
+    }
 }

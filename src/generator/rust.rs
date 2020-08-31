@@ -1,5 +1,6 @@
 use crate::generator::{Generator, Options, Version};
 use crate::snap::{App, File, Part};
+
 use cargo_lock::Lockfile;
 use std::collections::BTreeMap;
 use std::error::Error;
@@ -25,21 +26,21 @@ impl Generator for RustGenerator {
         // Parse Cargo.toml to extract and prefill data
         let cargo = cargo_toml::Manifest::from_path(source_path.as_ref().join("Cargo.toml"))?;
         if let Some(package) = cargo.package {
-            debug!("Extract snap name ({}) from Cargo.toml", package.name);
+            log::debug!("Extract snap name ({}) from Cargo.toml", package.name);
             snap.name = package.name;
 
             if let Some(license) = package.license {
-                debug!("Extract snap license ({}) from Cargo.toml", license);
+                log::debug!("Extract snap license ({}) from Cargo.toml", license);
                 snap.license = license;
             }
 
             if let Some(description) = package.description {
-                debug!("Extract snap summary from Cargo.toml");
+                log::debug!("Extract snap summary from Cargo.toml");
                 snap.summary = description;
             }
 
             if options.snap_version == Version::Auto {
-                debug!("Extract snap version ({}) from Cargo.toml", package.version);
+                log::debug!("Extract snap version ({}) from Cargo.toml", package.version);
                 snap.version = package.version;
             }
         }
@@ -57,9 +58,10 @@ impl Generator for RustGenerator {
                         && !build_packages.iter().any(|p| p == LIBSSL_DEV)
                     {
                         // watch out for openssl-sys dependencies
-                        debug!(
+                        log::debug!(
                             "Adding {} build package as required by {}",
-                            LIBSSL_DEV, package.name
+                            LIBSSL_DEV,
+                            package.name
                         );
                         build_packages.push(LIBSSL_DEV.to_string());
                     }
@@ -89,7 +91,7 @@ impl Generator for RustGenerator {
         // TODO support multiple crates project?
 
         if source_path.as_ref().join("src").join("main.rs").exists() {
-            debug!("Found single executable (name: {})", snap.name);
+            log::debug!("Found single executable (name: {})", snap.name);
             apps.insert(
                 snap.name.clone(),
                 App {
@@ -104,7 +106,7 @@ impl Generator for RustGenerator {
                 let file_name = entry.file_name().to_str().unwrap().to_string();
                 if entry.path().is_file() && file_name.ends_with(".rs") {
                     let binary_name = file_name.replace(".rs", "");
-                    debug!("Found executable (name: {})", binary_name);
+                    log::debug!("Found executable (name: {})", binary_name);
                     apps.insert(
                         binary_name.clone(),
                         App {
