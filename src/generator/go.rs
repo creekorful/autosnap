@@ -1,11 +1,11 @@
+use crate::generator::{Generator, Options};
+use crate::snap::{App, File, Part};
+
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 use std::{fs, io};
-
-use crate::generator::{Generator, Options};
-use crate::snap::{App, File, Part};
 
 // the go.mod file
 #[derive(Default)]
@@ -29,7 +29,7 @@ impl Generator for GoGenerator {
 
         // fetch go import path from go.mod
         let mod_file = parse_mod(source_path.as_ref().join("go.mod"))?;
-        debug!(
+        log::debug!(
             "Setting go-import-path to {} (using go.mod)",
             mod_file.import_path
         );
@@ -91,7 +91,7 @@ fn find_executables<P: AsRef<Path>>(path: P) -> Result<Vec<String>, Box<dyn Erro
                 let content = fs::read_to_string(entry.path())?;
                 if content.contains("package main") && content.contains("func main()") {
                     let executable_name = filename.replace(".go", "");
-                    debug!("Found executable (name: {})", executable_name);
+                    log::debug!("Found executable (name: {})", executable_name);
                     executables.push(executable_name);
                 }
             }

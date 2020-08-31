@@ -1,7 +1,7 @@
+use crate::snap::File;
+
 use std::error::Error;
 use std::path::Path;
-
-use crate::snap::File;
 
 mod go;
 mod rust;

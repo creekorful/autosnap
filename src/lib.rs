@@ -1,16 +1,11 @@
-#[macro_use]
-extern crate log;
-extern crate simple_logger;
+use crate::generator::{Generator, GeneratorBuilder, Options, Version};
+use crate::snap::SNAPCRAFT_YAML;
 
+use askalono::{Store, TextData};
 use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::{env, fs, io};
-
 use url::Url;
-
-use crate::generator::{Generator, GeneratorBuilder, Options, Version};
-use crate::snap::SNAPCRAFT_YAML;
-use askalono::{Store, TextData};
 
 pub mod generator;
 pub mod snap;
@@ -64,7 +59,7 @@ pub fn package_source<P: AsRef<Path>>(
     match &options.snap_version {
         Version::Git => snap.version = "git".to_string(),
         Version::Fixed(version) => {
-            debug!("Set snap version to {}", version);
+            log::debug!("Set snap version to {}", version);
             snap.version = version.clone()
         }
         _ => {}
@@ -78,9 +73,10 @@ pub fn package_source<P: AsRef<Path>>(
         // TODO use real value above
         if result.score > 0.9 {
             snap.license = result.name.to_string();
-            debug!(
+            log::debug!(
                 "Auto-detect snap license ({}) from file {}",
-                result.name, filename
+                result.name,
+                filename
             );
         }
     }
