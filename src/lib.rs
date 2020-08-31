@@ -15,6 +15,8 @@ use askalono::{Store, TextData};
 pub mod generator;
 pub mod snap;
 
+static LICENSE_CACHE: &[u8] = include_bytes!("embedded-cache.bin.zstd");
+
 pub fn fetch_source(source_url: &Url) -> Result<PathBuf, Box<dyn Error>> {
     // TODO support tarball etc
 
@@ -70,7 +72,7 @@ pub fn package_source<P: AsRef<Path>>(
 
     // Try to autodetect license if possible
     if let Some((license, filename)) = find_license(&source_path)? {
-        let store = Store::new(); // TODO from_cache
+        let store = Store::from_cache(LICENSE_CACHE)?;
         let result = store.analyze(&TextData::from(license));
 
         // TODO use real value above
