@@ -5,11 +5,13 @@ use std::{fs, io};
 use askalono::{Store, TextData};
 
 use crate::generator::go::GoProvider;
+use crate::generator::python::PythonProvider;
 use crate::generator::rust::RustProvider;
 use crate::snap::{App, File, Part};
 use crate::Result;
 
 mod go;
+mod python;
 mod rust;
 
 static LICENSE_CACHE: &[u8] = include_bytes!("embedded-cache.bin.zstd");
@@ -66,6 +68,7 @@ pub trait Generator {
 pub enum Generators {
     Go(GoProvider),
     Rust(RustProvider),
+    Python(PythonProvider),
 }
 
 impl Generators {
@@ -83,6 +86,12 @@ impl Generators {
             }
         } else if GoProvider::can_provide(&source_path) {
             let provider = GoProvider::provide(&source_path, source_name);
+            match provider {
+                Ok(v) => Ok(Box::new(v)),
+                Err(e) => Err(e),
+            }
+        } else if PythonProvider::can_provide(&source_path) {
+            let provider = PythonProvider::provide(&source_path, source_name);
             match provider {
                 Ok(v) => Ok(Box::new(v)),
                 Err(e) => Err(e),
