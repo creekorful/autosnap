@@ -85,6 +85,7 @@ impl Generator for GoGenerator {
                 build_packages: Some(vec!["gcc".to_string(), "libc6-dev".to_string()]),
                 stage_packages: None,
                 go_import_path: Some(self.mod_file.import_path.clone()),
+                python_version: None,
             },
         );
 

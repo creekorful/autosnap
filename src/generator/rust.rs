@@ -88,6 +88,7 @@ impl Generator for RustGenerator {
                 build_packages,
                 stage_packages: None,
                 go_import_path: None,
+                python_version: None,
             },
         );
 
