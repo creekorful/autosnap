@@ -17,7 +17,7 @@ fn main() {
             Arg::with_name("source")
                 .value_name("SRC")
                 .required(true)
-                .help("The source location (example: https://github.com/creekorful/osync)."),
+                .help("The source location (example: https://github.com/creekorful/osync.git)."),
         )
         .arg(
             Arg::with_name("log-level")
@@ -63,6 +63,7 @@ fn main() {
     // build options
     let options = Options {
         snap_version: Version::from(matches.value_of("snap-version").unwrap()),
+        source_name: "".to_string(),
     };
 
     // package the source code

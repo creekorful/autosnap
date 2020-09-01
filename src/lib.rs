@@ -1,18 +1,26 @@
-use crate::generator::{Generator, GeneratorBuilder, Options, Version};
-use crate::snap::SNAPCRAFT_YAML;
+use crate::generator::{Generators, Options};
+use crate::snap::{File, SNAPCRAFT_YAML};
 
-use askalono::{Store, TextData};
+use core::result;
+use std::env;
 use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::{env, fs, io};
 use url::Url;
 
 pub mod generator;
 pub mod snap;
 
-static LICENSE_CACHE: &[u8] = include_bytes!("embedded-cache.bin.zstd");
+type Result<T> = result::Result<T, Box<dyn Error>>;
 
-pub fn fetch_source(source_url: &Url) -> Result<PathBuf, Box<dyn Error>> {
+/// Fetch given remote source and 'install' it in the working directory,
+/// and return path to the source.
+///
+/// ```no_run
+/// use autosnap::fetch_source;
+/// use url::Url;
+/// let source = fetch_source(&Url::parse("https://github.com/creekorful/osync.git").unwrap()).unwrap();
+/// ```
+pub fn fetch_source(source_url: &Url) -> Result<PathBuf> {
     // TODO support tarball etc
 
     let cwd = env::current_dir()?;
@@ -30,10 +38,16 @@ pub fn fetch_source(source_url: &Url) -> Result<PathBuf, Box<dyn Error>> {
     Ok(path)
 }
 
-pub fn package_source<P: AsRef<Path>>(
-    source_path: P,
-    options: &Options,
-) -> Result<snap::File, Box<dyn Error>> {
+/// Package source located at given path using given options
+///
+/// ```no_run
+/// use autosnap::{fetch_source, package_source};
+/// use url::Url;
+/// use autosnap::generator::{Options, Version};
+/// let path = fetch_source(&Url::parse("https://www.github.com/creekorful/osync.git").unwrap()).unwrap();
+/// let snap = package_source(&path, &Options {source_name: "".to_string(), snap_version: Version::Git}).unwrap();
+/// ```
+pub fn package_source<P: AsRef<Path>>(source_path: P, options: &Options) -> Result<File> {
     // convert . into current dir
     let source_path = if source_path.as_ref().eq(Path::new(".")) {
         env::current_dir()?
@@ -41,7 +55,9 @@ pub fn package_source<P: AsRef<Path>>(
         source_path.as_ref().to_path_buf()
     };
 
+    let mut options = options.clone();
     let source_name = source_path.file_name().unwrap().to_str().unwrap();
+    options.source_name = source_name.to_string();
 
     // Determinate if not already packaged
     if source_path.join(SNAPCRAFT_YAML).exists()
@@ -50,60 +66,6 @@ pub fn package_source<P: AsRef<Path>>(
         return Err(format!("{} is already packaged", source_name).into());
     }
 
-    // TODO Identify the project license
-    // using https://github.com/jpeddicord/askalono
-
-    // Create snap with defaults set
-    let mut snap = snap::File::new(source_name);
-
-    match &options.snap_version {
-        Version::Git => snap.version = "git".to_string(),
-        Version::Fixed(version) => {
-            log::debug!("Set snap version to {}", version);
-            snap.version = version.clone()
-        }
-        _ => {}
-    }
-
-    // Try to autodetect license if possible
-    if let Some((license, filename)) = find_license(&source_path)? {
-        let store = Store::from_cache(LICENSE_CACHE)?;
-        let result = store.analyze(&TextData::from(license));
-
-        // TODO use real value above
-        if result.score > 0.9 {
-            snap.license = result.name.to_string();
-            log::debug!(
-                "Auto-detect snap license ({}) from file {}",
-                result.name,
-                filename
-            );
-        }
-    }
-
-    // And use appropriate generator to complete the generation
-    let generator_builder = GeneratorBuilder::default();
-    let generator = match generator_builder.get(&source_path) {
-        Ok(generator) => generator,
-        Err(e) => {
-            return Err(e);
-        }
-    };
-
-    generator.generate(snap, &source_path, &options)
-}
-
-fn find_license<P: AsRef<Path>>(source_path: P) -> Result<Option<(String, String)>, io::Error> {
-    if source_path.as_ref().join("LICENSE").exists() {
-        fs::read_to_string(source_path.as_ref().join("LICENSE"))
-            .map(|v| Some((v, "LICENSE".to_string())))
-    } else if source_path.as_ref().join("LICENSE.md").exists() {
-        fs::read_to_string(source_path.as_ref().join("LICENSE.md"))
-            .map(|v| Some((v, "LICENSE.md".to_string())))
-    } else if source_path.as_ref().join("COPYING").exists() {
-        fs::read_to_string(source_path.as_ref().join("COPYING"))
-            .map(|v| Some((v, "COPYING".to_string())))
-    } else {
-        Ok(None)
-    }
+    // Use appropriate generator to complete the generation
+    Generators::generate(&source_path, &options)
 }
