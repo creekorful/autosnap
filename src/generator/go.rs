@@ -196,7 +196,8 @@ mod tests {
         let executables = find_executables(tmp_dir);
         assert!(executables.is_ok());
 
-        let executables = executables.unwrap();
-        assert_eq!(executables, vec!["foo", "baz", "bar"]);
+        let mut executables = executables.unwrap();
+        executables.sort();
+        assert_eq!(executables, vec!["bar", "baz", "foo"]);
     }
 }
