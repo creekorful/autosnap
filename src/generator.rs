@@ -53,7 +53,7 @@ trait Provider<G: Generator> {
 /// A `Generator` is an Autosnap extension that know how to package
 /// a specific language.
 pub trait Generator {
-    fn name(&self) -> crate::Result<Option<String>>;
+    fn name(&self) -> Result<Option<String>>;
     fn version(&self) -> Result<Option<String>>;
     fn summary(&self) -> Result<Option<String>>;
     fn description(&self) -> Result<Option<String>>;
@@ -74,6 +74,7 @@ impl Generators {
         source_path: P,
         source_name: &str,
     ) -> Result<Box<dyn Generator>> {
+        // TODO improve below
         if RustProvider::can_provide(&source_path) {
             let provider = RustProvider::provide(&source_path, source_name);
             match provider {
