@@ -14,7 +14,7 @@ impl Provider<PythonGenerator> for PythonProvider {
     }
 
     fn can_provide<P: AsRef<Path>>(source_path: P) -> bool {
-        source_path.as_ref().join("requirements.txt").exists()
+        source_path.as_ref().join("setup.py").exists()
     }
 }
 
