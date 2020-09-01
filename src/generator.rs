@@ -79,12 +79,14 @@ impl Generators {
     ) -> Result<Box<dyn Generator>> {
         // TODO improve below
         if RustProvider::can_provide(&source_path) {
+            log::debug!("Using RustGenerator");
             let provider = RustProvider::provide(&source_path, source_name);
             match provider {
                 Ok(v) => Ok(Box::new(v)),
                 Err(e) => Err(e),
             }
         } else if GoProvider::can_provide(&source_path) {
+            log::debug!("Using GoGenerator");
             let provider = GoProvider::provide(&source_path, source_name);
             match provider {
                 Ok(v) => Ok(Box::new(v)),
