@@ -18,3 +18,7 @@ simple_logger = "1.6.0"
 cargo-lock = "4.0.1"
 cargo_toml = "0.8.1"
 askalono = "0.4.2"
+walkdir = "2.3.1"
+
+[dev-dependencies]
+tempdir = "0.3.7"

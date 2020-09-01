@@ -3,6 +3,8 @@ use std::collections::BTreeMap;
 
 pub const SNAPCRAFT_YAML: &str = "snapcraft.yaml";
 
+/// This structure represent a Snap (snapcraft.yaml) file.
+/// See this [link](https://snapcraft.io/docs/snapcraft-yaml-reference) for more information.
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct File {
     pub name: String,
@@ -34,6 +36,8 @@ impl File {
     }
 }
 
+/// This structure represent a Part.
+/// See this [link](https://snapcraft.io/docs/adding-parts) for more information.
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Part {
     pub plugin: String,
@@ -49,6 +53,8 @@ pub struct Part {
     pub go_import_path: Option<String>,
 }
 
+/// This structure represent an Application.
+/// See this [link](https://snapcraft.io/docs/commands-and-aliases) for more information.
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct App {
     pub command: String,
