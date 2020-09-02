@@ -3,7 +3,9 @@ use autosnap::snap::SNAPCRAFT_YAML;
 use autosnap::{fetch_source, package_source};
 
 use clap::{crate_authors, crate_version, App, AppSettings, Arg};
-use log::Level;
+use log::LevelFilter;
+use simple_logger::SimpleLogger;
+use std::error::Error;
 use std::str::FromStr;
 use std::{fs, process};
 use url::Url;
@@ -35,14 +37,13 @@ fn main() {
 
     // configure logging
     let log_level = matches.value_of("log-level").unwrap();
-    let log_level = match Level::from_str(log_level) {
-        Ok(level) => level,
+    match configure_logging(log_level) {
+        Ok(_) => {}
         Err(e) => {
             eprintln!("Error while configuring logging: {}", e);
             process::exit(1);
         }
-    };
-    simple_logger::init_with_level(log_level).unwrap();
+    }
 
     let src = matches.value_of("source").unwrap().to_string();
 
@@ -99,4 +100,14 @@ fn main() {
         "Please fix any TODO in the file and run `cd {} && snapcraft`",
         path.display()
     );
+}
+
+fn configure_logging(log_level: &str) -> Result<(), Box<dyn Error>> {
+    let log_level = LevelFilter::from_str(log_level)?;
+
+    SimpleLogger::new()
+        .with_level(log_level)
+        .with_module_level("askalono::preproc", LevelFilter::Off)
+        .init()
+        .map_err(|e| e.into())
 }
