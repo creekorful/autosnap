@@ -93,6 +93,7 @@ impl Generators {
                 Err(e) => Err(e),
             }
         } else if PythonProvider::can_provide(&source_path) {
+            log::debug!("Using PythonGenerator");
             let provider = PythonProvider::provide(&source_path, source_name);
             match provider {
                 Ok(v) => Ok(Box::new(v)),
