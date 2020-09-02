@@ -5,12 +5,14 @@ use std::{fs, io};
 use askalono::{Store, TextData};
 
 use crate::generator::go::GoProvider;
+use crate::generator::gradle::GradleProvider;
 use crate::generator::python::PythonProvider;
 use crate::generator::rust::RustProvider;
 use crate::snap::{App, File, Part};
 use crate::Result;
 
 mod go;
+mod gradle;
 mod python;
 mod rust;
 
@@ -69,6 +71,7 @@ pub enum Generators {
     Go(GoProvider),
     Rust(RustProvider),
     Python(PythonProvider),
+    Gradle(GradleProvider),
 }
 
 impl Generators {
@@ -95,6 +98,13 @@ impl Generators {
         } else if PythonProvider::can_provide(&source_path) {
             log::debug!("Using PythonGenerator");
             let provider = PythonProvider::provide(&source_path, source_name);
+            match provider {
+                Ok(v) => Ok(Box::new(v)),
+                Err(e) => Err(e),
+            }
+        } else if GradleProvider::can_provide(&source_path) {
+            log::debug!("Using GradleProvider");
+            let provider = GradleProvider::provide(&source_path, source_name);
             match provider {
                 Ok(v) => Ok(Box::new(v)),
                 Err(e) => Err(e),
