@@ -51,6 +51,9 @@ pub struct Part {
     #[serde(rename = "go-importpath")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub go_import_path: Option<String>,
+    #[serde(rename = "python-version")]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub python_version: Option<String>,
 }
 
 /// This structure represent an Application.
